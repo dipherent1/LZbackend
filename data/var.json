@@ -1,0 +1,13 @@
+{
+    "data": {
+        "variant1": [],
+        "chromosome1": [],
+        "position1": [],
+        "variant2": [],
+        "chromosome2": [],
+        "position2": [],
+        "correlation": []
+    },
+    "error": null,
+    "next": null
+}
