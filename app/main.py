@@ -178,3 +178,73 @@ async def get_recomb(
             "meta": ann_recomb_data['meta']
         }
 
+
+@app.get("/single/results/")
+async def get_single_results(
+    filter: str = Query(..., description="Filter string for single variant results")
+):
+    try:
+        # Parse filter string
+        # Example: "analysis in 41 and chromosome in '16' and position ge 200000 and position le 800000"
+        filters = {}
+        for condition in filter.split(' and '):
+            parts = condition.split()
+            if len(parts) >= 3:
+                field = parts[0]
+                operator = parts[1]
+                value = parts[2].strip("'")  # Remove quotes if present
+                
+                if field == 'chromosome' and operator == 'in':
+                    filters['chromosome'] = value
+                elif field == 'position' and operator == 'le':
+                    filters['position_le'] = int(value)
+                elif field == 'position' and operator == 'ge':
+                    filters['position_ge'] = int(value)
+                elif field == 'analysis' and operator == 'in':
+                    filters['analysis'] = int(value)
+
+        # Filter the data
+        filtered_data = {
+            'analysis': [],
+            'beta': [],
+            'chromosome': [],
+            'log_pvalue': [],
+            'position': [],
+            'ref_allele': [],
+            'ref_allele_freq': [],
+            'score_test_stat': [],
+            'se': [],
+            'variant': []
+        }
+
+        for i, chrom in enumerate(single_results_data['data']['chromosome']):
+            position = single_results_data['data']['position'][i]
+            analysis_id = single_results_data['data']['analysis'][i]
+            
+            # Apply filters
+            if (filters.get('chromosome') and chrom != filters['chromosome']):
+                continue
+            if (filters.get('position_le') and position > filters['position_le']):
+                continue
+            if (filters.get('position_ge') and position < filters['position_ge']):
+                continue
+            if (filters.get('analysis') and analysis_id != filters['analysis']):
+                continue
+
+            # Add matching data
+            for field in filtered_data.keys():
+                filtered_data[field].append(single_results_data['data'][field][i])
+
+        return {
+            "data": filtered_data,
+            "lastPage": None
+        }
+
+    except Exception as e:
+        return {
+            "data": None,
+            "lastPage": None,
+            "error": str(e)
+        }
+
+
