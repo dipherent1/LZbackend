@@ -178,6 +178,7 @@ async def get_recomb(
             "meta": ann_recomb_data['meta']
         }
 
+
 @app.get("/single/results/")
 async def get_single_results(
     filter: str = Query(..., description="Filter string for single variant results")
@@ -245,4 +246,5 @@ async def get_single_results(
             "lastPage": None,
             "error": str(e)
         }
+
 
