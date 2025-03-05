@@ -110,3 +110,71 @@ async def get_ld(
         }
     }
 
+@app.get("/recomb")
+async def get_recomb(
+    filter: str = Query(..., description="Filter string for recombination data")
+):
+    try:
+        # Parse filter string
+        # Example: "chromosome eq '16' and position le 800000 and position ge 200000 and id in 15"
+        filters = {}
+        for condition in filter.split(' and '):
+            parts = condition.split()
+            if len(parts) >= 3:
+                field = parts[0]
+                operator = parts[1]
+                value = parts[2].strip("'")  # Remove quotes if present
+                
+                if field == 'chromosome':
+                    filters['chromosome'] = value
+                elif field == 'position' and operator == 'le':
+                    filters['position_le'] = int(value)
+                elif field == 'position' and operator == 'ge':
+                    filters['position_ge'] = int(value)
+                elif field == 'id' and operator == 'in':
+                    filters['id'] = int(value)
+
+        # Filter the data
+        filtered_data = {
+            'chromosome': [],
+            'id': [],
+            'pos_cm': [],
+            'position': [],
+            'recomb_rate': []
+        }
+
+        for i, chrom in enumerate(ann_recomb_data['data']['chromosome']):
+            position = ann_recomb_data['data']['position'][i]
+            data_id = ann_recomb_data['data']['id'][i]
+            
+            # Apply filters
+            if (filters.get('chromosome') and chrom != filters['chromosome']):
+                continue
+            if (filters.get('position_le') and position > filters['position_le']):
+                continue
+            if (filters.get('position_ge') and position < filters['position_ge']):
+                continue
+            if (filters.get('id') and data_id != filters['id']):
+                continue
+
+            # Add matching data
+            filtered_data['chromosome'].append(chrom)
+            filtered_data['id'].append(data_id)
+            filtered_data['pos_cm'].append(ann_recomb_data['data']['pos_cm'][i])
+            filtered_data['position'].append(position)
+            filtered_data['recomb_rate'].append(ann_recomb_data['data']['recomb_rate'][i])
+
+        return {
+            "data": filtered_data,
+            "lastPage": None,
+            "meta": ann_recomb_data['meta']
+        }
+
+    except Exception as e:
+        return {
+            "data": None,
+            "lastPage": None,
+            "error": str(e),
+            "meta": ann_recomb_data['meta']
+        }
+
