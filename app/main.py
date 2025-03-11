@@ -2,6 +2,7 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from app.routers.jsonRouter import jsonRouter
+from app.routers.pandasRouter import pandasRouter
 
 app = FastAPI()
 
@@ -14,8 +15,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Define the root path
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
 # Include the JSON router
-routers = [jsonRouter]
+routers = [jsonRouter, pandasRouter]
 for router in routers:
     app.include_router(router)
 
